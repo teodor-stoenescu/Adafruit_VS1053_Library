@@ -447,6 +447,14 @@ void Adafruit_VS1053::reset() {
   }
   digitalWrite(_cs, HIGH);
   digitalWrite(_dcs, HIGH);
+
+  delay(100);
+
+  sciWrite(VS1053_REG_WRAMADDR, VS1053_GPIO_DDR);
+  sciWrite(VS1053_REG_WRAM, 3);
+  sciWrite(VS1053_REG_WRAMADDR, VS1053_GPIO_ODATA);
+  sciWrite(VS1053_REG_WRAM, 0);
+
   delay(100);
   softReset();
   delay(100);
