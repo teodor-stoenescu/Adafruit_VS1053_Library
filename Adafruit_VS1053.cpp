@@ -12,8 +12,10 @@
   BSD license, all text above must be included in any redistribution
  ****************************************************/
 
+#define USE_PROGFS
+
 #include <Adafruit_VS1053.h>
-#include <SD.h>
+#include "fsthunk.h"
 
 #if defined(ARDUINO_STM32_FEATHER)
    #define digitalPinToInterrupt(x) x
@@ -132,8 +134,8 @@ boolean Adafruit_VS1053_FilePlayer::begin(void) {
 }
 
 
-boolean Adafruit_VS1053_FilePlayer::playFullFile(const char *trackname) {
-  if (! startPlayingFile(trackname)) return false;
+boolean Adafruit_VS1053_FilePlayer::playFullFile(const FILEDESCRIPTOR trackname) {
+  if (! startPlayingFile(trackname, false)) return false;
 
   while (playingMusic) {
     // twiddle thumbs
@@ -177,14 +179,14 @@ boolean Adafruit_VS1053_FilePlayer::stopped(void) {
 }
 
 
-boolean Adafruit_VS1053_FilePlayer::startPlayingFile(const char *trackname, boolean loop) {
+boolean Adafruit_VS1053_FilePlayer::startPlayingFile(const FILEDESCRIPTOR trackname, boolean loop) {
   // reset playback
   sciWrite(VS1053_REG_MODE, VS1053_MODE_SM_LINE1 | VS1053_MODE_SM_SDINEW);
   // resync
   sciWrite(VS1053_REG_WRAMADDR, 0x1e29);
   sciWrite(VS1053_REG_WRAM, 0);
 
-  currentTrack = SD.open(trackname);
+  currentTrack = FS.open(trackname);
   if (!currentTrack) {
     return false;
   }
@@ -336,9 +338,9 @@ void Adafruit_VS1053::applyPatch(const uint16_t *patch, uint16_t patchsize) {
 }
 
 
-uint16_t Adafruit_VS1053::loadPlugin(char *plugname) {
+uint16_t Adafruit_VS1053::loadPlugin(FILEDESCRIPTOR plugname) {
 
-  File plugin = SD.open(plugname);
+  FILE plugin = FS.open(plugname);
   if (!plugin) {
     Serial.println("Couldn't open the plugin file");
     Serial.println(plugin);
@@ -509,7 +511,7 @@ uint16_t Adafruit_VS1053::recordedReadWord(void) {
 }
 
 
-boolean Adafruit_VS1053::prepareRecordOgg(char *plugname) {
+boolean Adafruit_VS1053::prepareRecordOgg(FILEDESCRIPTOR plugname) {
   sciWrite(VS1053_REG_CLOCKF, 0xC000);  // set max clock
   delay(1);    while (! readyForData() );
 

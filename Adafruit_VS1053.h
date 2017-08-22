@@ -27,7 +27,7 @@
 #endif
 
 #include <SPI.h> 
-#include <SD.h>
+#include "fsthunk.h"
 
 // define here the size of a register!
 #if defined(ARDUINO_STM32_FEATHER)
@@ -125,7 +125,7 @@ class Adafruit_VS1053 {
   void playData(uint8_t *buffer, uint8_t buffsiz);
   boolean readyForData(void);
   void applyPatch(const uint16_t *patch, uint16_t patchsize);
-  uint16_t loadPlugin(char *fn);
+  uint16_t loadPlugin(FILEDESCRIPTOR fn);
 
   void GPIO_digitalWrite(uint8_t i, uint8_t val);
   void GPIO_digitalWrite(uint8_t i);
@@ -133,7 +133,7 @@ class Adafruit_VS1053 {
   boolean GPIO_digitalRead(uint8_t i);
   void GPIO_pinMode(uint8_t i, uint8_t dir);
  
-  boolean prepareRecordOgg(char *plugin);
+  boolean prepareRecordOgg(FILEDESCRIPTOR plugin);
   void startRecordOgg(boolean mic);
   void stopRecordOgg(void);
   uint16_t recordedWordsWaiting(void);
@@ -169,11 +169,11 @@ class Adafruit_VS1053_FilePlayer : public Adafruit_VS1053 {
 
   boolean begin(void);
   boolean useInterrupt(uint8_t type);
-  File currentTrack;
+  FILE currentTrack;
   volatile boolean playingMusic;
   void feedBuffer(void);
-  boolean startPlayingFile(const char *trackname, boolean loop);
-  boolean playFullFile(const char *trackname);
+  boolean startPlayingFile(const FILEDESCRIPTOR trackname, boolean loop);
+  boolean playFullFile(const FILEDESCRIPTOR trackname);
   void stopPlaying(void);
   void stopLooping();
   boolean paused(void);
