@@ -124,6 +124,7 @@ boolean Adafruit_VS1053_FilePlayer::begin(void) {
   digitalWrite(_cardCS, HIGH);  
 
   uint8_t v  = Adafruit_VS1053::begin();   
+  playLoop = false;
 
   //dumpRegs();
   //Serial.print("Version = "); Serial.println(v);
@@ -143,12 +144,18 @@ boolean Adafruit_VS1053_FilePlayer::playFullFile(const char *trackname) {
   return true;
 }
 
+void Adafruit_VS1053_FilePlayer::stopLooping(void) {
+  playLoop = false;
+}
+
+
 void Adafruit_VS1053_FilePlayer::stopPlaying(void) {
   // cancel all playback
   sciWrite(VS1053_REG_MODE, VS1053_MODE_SM_LINE1 | VS1053_MODE_SM_SDINEW | VS1053_MODE_SM_CANCEL);
   
   // wrap it up!
   playingMusic = false;
+  playLoop = false;
   currentTrack.close();
 }
 
@@ -170,7 +177,7 @@ boolean Adafruit_VS1053_FilePlayer::stopped(void) {
 }
 
 
-boolean Adafruit_VS1053_FilePlayer::startPlayingFile(const char *trackname) {
+boolean Adafruit_VS1053_FilePlayer::startPlayingFile(const char *trackname, boolean loop) {
   // reset playback
   sciWrite(VS1053_REG_MODE, VS1053_MODE_SM_LINE1 | VS1053_MODE_SM_SDINEW);
   // resync
@@ -190,6 +197,7 @@ boolean Adafruit_VS1053_FilePlayer::startPlayingFile(const char *trackname) {
   sciWrite(VS1053_REG_DECODETIME, 0x00);
 
   playingMusic = true;
+  playLoop = loop;
 
   // wait till its ready for data
   while (! readyForData() ) {
@@ -241,10 +249,17 @@ void Adafruit_VS1053_FilePlayer::feedBuffer_noLock(void) {
     int bytesread = currentTrack.read(mp3buffer, VS1053_DATABUFFERLEN);
     
     if (bytesread == 0) {
-      // must be at the end of the file, wrap it up!
-      playingMusic = false;
-      currentTrack.close();
-      break;
+      // must be at the end of the file
+      if (playLoop) {
+        currentTrack.seek(0);
+        bytesread = currentTrack.read(&mp3buffer[bytesread], VS1053_DATABUFFERLEN);
+        //Serial.print("Reading bytes "); Serial.print(bytesread); Serial.print(" "); Serial.println(mp3buffer[0]);
+      } else {
+        //wrap it up!
+        playingMusic = false;
+        currentTrack.close();
+        break;
+      }
     }
 
     playData(mp3buffer, bytesread);

@@ -172,9 +172,10 @@ class Adafruit_VS1053_FilePlayer : public Adafruit_VS1053 {
   File currentTrack;
   volatile boolean playingMusic;
   void feedBuffer(void);
-  boolean startPlayingFile(const char *trackname);
+  boolean startPlayingFile(const char *trackname, boolean loop);
   boolean playFullFile(const char *trackname);
   void stopPlaying(void);
+  void stopLooping();
   boolean paused(void);
   boolean stopped(void);
   void pausePlaying(boolean pause);
@@ -182,6 +183,7 @@ class Adafruit_VS1053_FilePlayer : public Adafruit_VS1053 {
  private:
   void feedBuffer_noLock(void);
 
+  boolean playLoop;
   uint8_t _cardCS;
 };
 
